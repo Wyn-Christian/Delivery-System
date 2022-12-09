@@ -6,7 +6,7 @@ This is a system where it can manage your products in a website.
 
 Download the source code and extract it to your prefered directory.
 
-Open the source code folder in the VSC (or your prefered code editor) then execute the following commands:
+Open the source code folder in the VSC (or your prefered code editor) then execute the following commands in the terminal:
 
     cd .\server\ ;
     npm install ;
