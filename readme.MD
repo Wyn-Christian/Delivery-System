@@ -4,7 +4,7 @@ This is a system where it can manage your products in a website.
 
 ## Installation
 
-Download the source code then install the node packages in the server.
+Download the source code and extract it to your prefered directory.
 
 Open the source code folder in the VSC (or your prefered code editor) then execute the following commands:
 
