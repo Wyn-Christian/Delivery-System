@@ -8,7 +8,7 @@ const checkout_controller = require("../controllers/checkout");
 const authKey_controller = require("../controllers/authKey");
 
 router.all("*", function (req, res, next) {
-  console.log(`NOT IMPLEMENTED: API key authentication: ${req.query.api_key} `);
+  // console.log(`NOT IMPLEMENTED: API key authentication: ${req.query.api_key} `);
   next();
 });
 
