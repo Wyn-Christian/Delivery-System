@@ -81,8 +81,6 @@ exports.create = [
   (req, res, next) => {
     // Extract the validation errors from a request
     const errors = validationResult(req);
-    console.log(`res.locals.product_id : ${res.locals.product_id}`);
-    console.log(`res.locals.variant_id : ${res.locals.variant_id}`);
 
     const new_checkout = new Checkout({
       api_id: req.body.api_id,

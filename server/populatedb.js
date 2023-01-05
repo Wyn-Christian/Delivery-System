@@ -13,10 +13,6 @@ if (!userArgs[0].startsWith('mongodb')) {
 }
 */
 var async = require("async");
-// var Book = require("./models/book");
-// var Author = require("./models/author");
-// var Genre = require("./models/genre");
-// var BookInstance = require("./models/bookinstance");
 
 var User = require("./models/user");
 var AuthKey = require("./models/authKey");
@@ -32,11 +28,6 @@ mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
-
-// var authors = [];
-// var genres = [];
-// var books = [];
-// var bookinstances = [];
 
 var users = [];
 var authKeys = [];
