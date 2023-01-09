@@ -16,8 +16,8 @@ Open the source code folder in the VSC (or your prefered code editor) then execu
 
 ### How to start the client
 
-After starting the server, execute the following commands in the terminal:
+After starting the server, execute the following commands in the **another** terminal:
 
-    cd ..\client\ ;
+    cd .\client\ ;
     npm install ;
     npm start ;
