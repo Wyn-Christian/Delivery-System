@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useNavPage } from "../contexts/NavPage";
 
 function Header({ title }) {
-  const [navPage, setNavPage] = useNavPage();
+  const { navPage, setNavPage } = useNavPage();
 
   return (
     <div className="head-title">

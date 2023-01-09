@@ -1,12 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+
 import { useNavPage } from "../contexts/NavPage";
 import { useEffect, useContext } from "react";
 import { ColorModeContext } from "../contexts/Theme";
 import { useUser } from "../contexts/User";
 
 const NavItem = ({ title, icon, to, selected, setSelected }) => {
-  const [navPage, setNavPage] = useNavPage();
+  const { navPage, setNavPage } = useNavPage();
 
   let classnames = [];
   if (title === "Logout") {
@@ -29,13 +29,14 @@ const NavItem = ({ title, icon, to, selected, setSelected }) => {
   );
 };
 
-function Sidebar({ isNavHide, setNavHide }) {
+function Sidebar() {
   const colorMode = useContext(ColorModeContext);
-  const { user, setUser } = useUser();
+  const { isDarkMode, setIsDarkMode, isNavHide, setNavHide } = useNavPage();
+
+  const { user } = useUser();
 
   useEffect(() => console.log(user), [user]);
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
   useEffect(() => {
     isDarkMode
       ? document.body.classList.add("dark")
@@ -45,11 +46,11 @@ function Sidebar({ isNavHide, setNavHide }) {
   return (
     <div>
       <section id="sidebar" className={isNavHide ? "hide" : ""}>
-        <NavLink to="/" className="brand">
+        <NavLink to={user ? "/" : undefined} className="brand">
           {isDarkMode ? (
-            <img src="img/logow.png" alt="" />
+            <img src="img/logo-dark.png" alt="" />
           ) : (
-            <img src="img/logo.png" alt="" />
+            <img src="img/logo-light.png" alt="" />
           )}
         </NavLink>
         {user && (
@@ -58,7 +59,7 @@ function Sidebar({ isNavHide, setNavHide }) {
             <NavItem title="Inventory" to="/inventory" icon="layer" />
             <NavItem title="Products" to="/products" icon="cake" />
             <NavItem title="Checkouts" to="/checkouts" icon="cart" />
-            <NavItem title="Orders" to="/orders" icon="package" />
+            {/* <NavItem title="Orders" to="/orders" icon="package" /> */}
           </ul>
         )}
         {user && (
@@ -97,7 +98,7 @@ function Sidebar({ isNavHide, setNavHide }) {
             }}
           />
           <label htmlFor="switch-mode" className="switch-mode"></label>
-          <NavLink to="/" className="profile">
+          <NavLink to={user ? "/account" : "/login"} className="profile">
             <img src="img/no-profile-pic.jpg" alt="pic" />
           </NavLink>
         </nav>

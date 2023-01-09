@@ -1,39 +1,13 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useReducer,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const userInfo = [
-  {
-    id: "1",
-    username: "John-Doe-Sheesh",
-    first_name: "John",
-    last_name: "Doe",
-    birthday: "10/10/2002",
-    email: "john.doe@sample.com",
-    password: "sample",
-  },
-  {
-    id: "2",
-    username: "lance123",
-    first_name: "Lance",
-    last_name: "Lurance",
-    birthday: "06/10/2002",
-    email: "lancelurance@sample.com",
-    password: "lance",
-  },
-];
+import { useNavPage } from "../contexts/NavPage";
 
 // User Custom Hooks
 export const useUserSource = () => {
   const [user, setUser] = useState(undefined);
   const navigate = useNavigate();
+  const { setNavHide } = useNavPage();
 
   const loginUser = ({ username, password }) => {
     fetch("./mock/user.json")
@@ -45,12 +19,19 @@ export const useUserSource = () => {
         if (userDB.length) {
           setUser(...userDB);
           navigate("/");
+          setNavHide(false);
         }
         return result;
       });
   };
 
-  return { user, setUser, loginUser };
+  const logoutUser = () => {
+    setUser(undefined);
+    navigate("/login");
+    setNavHide(true);
+  };
+
+  return { user, setUser, loginUser, logoutUser };
 };
 
 export const UserContext = createContext({});

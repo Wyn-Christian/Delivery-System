@@ -30,7 +30,7 @@ function Login() {
             alt="inventory-logo"
           />
         </div>
-        <div className="text-login">Login Here </div>
+        <div className="text-login">Login Here</div>
         <form className="p-3 mt-3" onSubmit={formik.handleSubmit}>
           <div className="form-field d-flex align-items-center">
             <span className="far fa-user"></span>

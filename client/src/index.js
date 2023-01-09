@@ -13,12 +13,12 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <UserProvider>
-        <NavPageProvider>
+      <NavPageProvider>
+        <UserProvider>
           <CssBaseline />
           <App />
-        </NavPageProvider>
-      </UserProvider>
+        </UserProvider>
+      </NavPageProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

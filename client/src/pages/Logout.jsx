@@ -1,11 +1,9 @@
 import { useTheme } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/User";
 
-function Logout({ setNavHide }) {
+function Logout() {
   const theme = useTheme();
-  const { setUser } = useUser();
-  const navigate = useNavigate();
+  const { logoutUser } = useUser();
 
   return (
     <main>
@@ -24,14 +22,7 @@ function Logout({ setNavHide }) {
         <div style={{ textAlign: "center", paddingBottom: "1rem" }}>
           Are you sure?
         </div>
-        <button
-          className="btn mt-3"
-          onClick={() => {
-            setUser(undefined);
-            navigate("/login");
-            setNavHide(true);
-          }}
-        >
+        <button className="btn mt-3" onClick={logoutUser}>
           Log-out
         </button>
       </div>

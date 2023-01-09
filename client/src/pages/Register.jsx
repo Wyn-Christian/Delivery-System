@@ -1,9 +1,30 @@
-import { useTheme } from "@mui/material";
+import { Snackbar, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
 import { useFormik } from "formik";
+import { useState } from "react";
 
 function Register() {
   const theme = useTheme();
+  const [hasErrors, setHasErrors] = useState(false);
+
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setHasErrors(false);
+  };
+
+  const validate = (values) => {
+    const errors = {};
+
+    if (values.password !== values.repassword) {
+      errors.password = "Password don't match!";
+      setHasErrors(true);
+    }
+
+    return errors;
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -14,6 +35,7 @@ function Register() {
       password: "",
       repassword: "",
     },
+    validate,
     onSubmit: (values) => {
       alert(JSON.stringify(values, null, 2));
     },
@@ -21,6 +43,22 @@ function Register() {
 
   return (
     <main>
+      {formik.errors.password ? (
+        <Snackbar
+          open={hasErrors}
+          autoHideDuration={3000}
+          onClose={handleClose}
+          message={formik.errors.password}
+          sx={{
+            zIndex: "99999",
+            "& .MuiSnackbarContent-message": {
+              fontFamily: "Poppins !important",
+              fontSize: "1rem",
+            },
+          }}
+        />
+      ) : null}
+
       <div className="wrapper">
         <div className="logo">
           <img
@@ -41,7 +79,7 @@ function Register() {
               name="first_name"
               id="FirstName"
               placeholder="First Name"
-              // required
+              required
               onChange={formik.handleChange}
               value={formik.values.first_name}
             />
@@ -53,7 +91,7 @@ function Register() {
               name="last_name"
               id="LastName"
               placeholder="Last Name"
-              // required
+              required
               onChange={formik.handleChange}
               value={formik.values.last_name}
             />
@@ -66,7 +104,7 @@ function Register() {
               name="email"
               id="email"
               placeholder="E-mail"
-              // required
+              required
               onChange={formik.handleChange}
               value={formik.values.email}
             />
@@ -78,7 +116,7 @@ function Register() {
               name="username"
               id="userName"
               placeholder="Username"
-              // required
+              required
               onChange={formik.handleChange}
               value={formik.values.username}
             />
@@ -89,10 +127,11 @@ function Register() {
               name="password"
               id="pwd"
               placeholder="Password"
-              // required
+              required
               onChange={formik.handleChange}
               value={formik.values.password}
             />
+
             <span id="StrengthDisp" className="badge displayBadge"></span>
           </div>
           <div className="form-field d-flex align-items-center">
@@ -101,7 +140,7 @@ function Register() {
               name="repassword"
               id="pass"
               placeholder="Re-type Password"
-              // required
+              required
               onChange={formik.handleChange}
               value={formik.values.repassword}
             />

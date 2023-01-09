@@ -1,12 +1,20 @@
-import { useState, useContext, createContext, useEffect } from "react";
+import { useState, useContext, createContext } from "react";
 
 function useNavPageSource() {
   const [navPage, setNavPage] = useState("Dashboard");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isNavHide, setNavHide] = useState(true);
 
-  return [navPage, setNavPage];
+  return {
+    navPage,
+    setNavPage,
+    isDarkMode,
+    setIsDarkMode,
+    isNavHide,
+    setNavHide,
+  };
 }
 const NavPageContext = createContext();
-
 export const useNavPage = () => useContext(NavPageContext);
 
 export function NavPageProvider({ children }) {
