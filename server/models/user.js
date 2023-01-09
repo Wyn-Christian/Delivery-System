@@ -21,10 +21,6 @@ UserSchema.virtual("name").get(function () {
     : this.first_name;
 });
 
-UserSchema.virtual("birthday_formatted").get(function () {
-  return DateTime.fromJSDate(this.birthday).toFormat("yyyy-MM-dd");
-});
-
 UserSchema.virtual("url").get(function () {
   return `/user/${this._id}`;
 });

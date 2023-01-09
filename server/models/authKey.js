@@ -12,6 +12,7 @@ const AuthKeySchema = new Schema(
       enum: ["Active", "Inactive", "Blocked"],
       default: "Active",
     },
+    name: String,
     user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   {

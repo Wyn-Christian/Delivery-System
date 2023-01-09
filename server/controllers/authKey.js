@@ -8,8 +8,8 @@ const AuthKey = require("../models/authKey");
 exports.list = function (req, res, next) {
   // res.send("NOT IMPLEMENTED: Auth key list");
   AuthKey.find({})
-    .populate("user_id", "first_name last_name url birthday")
-    .select("id status user_id createdAt")
+    .populate("user_id", "username url")
+    .select("id status name user_id createdAt")
     .exec((err, list_api_keys) => {
       if (err) return next(err);
 
@@ -21,8 +21,8 @@ exports.list = function (req, res, next) {
 exports.detail = (req, res, next) => {
   // res.send(`NOT IMPLEMENTED: Auth key detail: ${req.params.id}`);
   AuthKey.findOne({ _id: req.params.id })
-    .populate("user_id", "first_name last_name url birthday")
-    .select("id status user_id createdAt")
+    .populate("user_id", "username url")
+    .select("id name status user_id createdAt")
     .exec((err, api_key) => {
       if (err) return next(err);
 

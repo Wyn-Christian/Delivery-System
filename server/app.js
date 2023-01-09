@@ -21,8 +21,9 @@ const mongoose = require("mongoose");
 
 mongoose.set("toJSON", { virtuals: true });
 
-const dev_db_url =
-  "mongodb+srv://MyFirstMongo:1234@myfirstmongo.3pf8i.mongodb.net/inventory_system_test?retryWrites=true&w=majority";
+const selected_db = "admin-test-1";
+
+const dev_db_url = `mongodb+srv://MyFirstMongo:1234@myfirstmongo.3pf8i.mongodb.net/${selected_db}?retryWrites=true&w=majority`;
 const mongoDB = process.env.MONGODB_URI || dev_db_url;
 
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });

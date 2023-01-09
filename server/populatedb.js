@@ -36,15 +36,15 @@ var variants = [];
 var products = [];
 var checkouts = [];
 
-function userCreate(first_name, last_name, age, email, password, birthday, cb) {
+function userCreate(username, first_name, last_name, email, password, cb) {
   userdetail = {
     first_name,
     email,
+    username,
     password,
   };
+
   if (last_name != false) userdetail.last_name = last_name;
-  if (age != false) userdetail.age = age;
-  if (birthday != false) userdetail.birthday = birthday;
 
   var user = new User(userdetail);
 
@@ -60,8 +60,8 @@ function userCreate(first_name, last_name, age, email, password, birthday, cb) {
   });
 }
 
-function authKeyCreate(status, user_id, cb) {
-  let authKeydetail = { status, user_id };
+function authKeyCreate(user_id, name, status, cb) {
+  let authKeydetail = { status, user_id, name };
 
   var authKey = new AuthKey(authKeydetail);
   authKey.save(function (err) {
@@ -179,27 +179,25 @@ function checkoutCreate(
 }
 
 function createUser(cb) {
-  async.parallel(
+  async.series(
     [
       function (callback) {
         userCreate(
-          "first",
-          "user",
-          20,
-          "test@sample.com",
+          "wyn-sample",
+          "Wyn",
+          "Rebanal",
+          "wyn@sample.com",
           "1234",
-          "2001-11-24",
           callback
         );
       },
       function (callback) {
         userCreate(
-          "john",
-          "doe",
-          27,
+          "johndoe",
+          "John",
+          "Doe",
           "johndoe@sample.com",
-          "1234",
-          "2003-12-30",
+          "john123",
           callback
         );
       },
@@ -210,13 +208,19 @@ function createUser(cb) {
 }
 
 function createAuthKeys(cb) {
-  async.parallel(
+  async.series(
     [
       function (callback) {
-        authKeyCreate("Active", users[0], callback);
+        authKeyCreate(users[0], "Bakery Inventory", "Active", callback);
       },
       function (callback) {
-        authKeyCreate("Inactive", users[1], callback);
+        authKeyCreate(users[0], "Phone Stocks", "Active", callback);
+      },
+      function (callback) {
+        authKeyCreate(users[1], "First Sample Store", "Inactive", callback);
+      },
+      function (callback) {
+        authKeyCreate(users[1], "Second Sample Store", "Active", callback);
       },
     ],
     cb
@@ -227,22 +231,22 @@ function createCategories(cb) {
   async.series(
     [
       function (callback) {
-        categoryCreate(1, "cake", authKeys[1], callback);
+        categoryCreate(1, "cake", authKeys[0], callback);
       },
       function (callback) {
-        categoryCreate(2, "cookie", authKeys[1], callback);
+        categoryCreate(2, "cookie", authKeys[0], callback);
       },
       function (callback) {
-        categoryCreate(3, "pastry", authKeys[1], callback);
+        categoryCreate(3, "pastry", authKeys[0], callback);
       },
       function (callback) {
-        categoryCreate(false, "Xiaomi", authKeys[0], callback);
+        categoryCreate(false, "Xiaomi", authKeys[1], callback);
       },
       function (callback) {
-        categoryCreate(false, "Poco", authKeys[0], callback);
+        categoryCreate(false, "Poco", authKeys[1], callback);
       },
       function (callback) {
-        categoryCreate(false, "Redmi", authKeys[0], callback);
+        categoryCreate(false, "Redmi", authKeys[1], callback);
       },
     ],
     cb
@@ -253,58 +257,58 @@ function createVariants(cb) {
   async.series(
     [
       function (callback) {
-        variantCreate(1, "6 x 8", 1, authKeys[1], callback);
+        variantCreate(1, "6 x 8", 1, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(2, "8 x 10", 1.2, authKeys[1], callback);
+        variantCreate(2, "8 x 10", 1.2, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(3, "10 x 12", 1.4, authKeys[1], callback);
+        variantCreate(3, "10 x 12", 1.4, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(4, "5 pcs", 1, authKeys[1], callback);
+        variantCreate(4, "5 pcs", 1, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(5, "10 pcs", 1.8, authKeys[1], callback);
+        variantCreate(5, "10 pcs", 1.8, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(6, "20 pcs", 2.8, authKeys[1], callback);
+        variantCreate(6, "20 pcs", 2.8, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(7, "2 pcs", 1, authKeys[1], callback);
+        variantCreate(7, "2 pcs", 1, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(8, "4 pcs", 1.8, authKeys[1], callback);
+        variantCreate(8, "4 pcs", 1.8, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(9, "6 pcs", 2.8, authKeys[1], callback);
+        variantCreate(9, "6 pcs", 2.8, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(10, "6 pcs", 1, authKeys[1], callback);
+        variantCreate(10, "6 pcs", 1, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(11, "12 pcs", 1.8, authKeys[1], callback);
+        variantCreate(11, "12 pcs", 1.8, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(12, "24 pcs", 2.8, authKeys[1], callback);
+        variantCreate(12, "24 pcs", 2.8, authKeys[0], callback);
       },
       function (callback) {
-        variantCreate(false, "4ram/64gb", 1, authKeys[0], callback);
+        variantCreate(false, "4ram/64gb", 1, authKeys[1], callback);
       },
       function (callback) {
-        variantCreate(false, "4ram/128gb", 1, authKeys[0], callback);
+        variantCreate(false, "4ram/128gb", 1, authKeys[1], callback);
       },
       function (callback) {
-        variantCreate(false, "6ram/128gb", 1, authKeys[0], callback);
+        variantCreate(false, "6ram/128gb", 1, authKeys[1], callback);
       },
       function (callback) {
-        variantCreate(false, "8ram/128gb", 1, authKeys[0], callback);
+        variantCreate(false, "8ram/128gb", 1, authKeys[1], callback);
       },
       function (callback) {
-        variantCreate(false, "8ram/256gb", 1, authKeys[0], callback);
+        variantCreate(false, "8ram/256gb", 1, authKeys[1], callback);
       },
       function (callback) {
-        variantCreate(false, "12ram/256gb", 1, authKeys[0], callback);
+        variantCreate(false, "12ram/256gb", 1, authKeys[1], callback);
       },
     ],
     cb
@@ -312,7 +316,7 @@ function createVariants(cb) {
 }
 
 function createProducts(cb) {
-  async.parallel(
+  async.series(
     [
       function (callback) {
         pVariants = variants.slice(0, 3);
@@ -322,7 +326,7 @@ function createProducts(cb) {
           600,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[0],
           pVariants,
           callback
@@ -336,7 +340,7 @@ function createProducts(cb) {
           600,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[0],
           pVariants,
           callback
@@ -350,7 +354,7 @@ function createProducts(cb) {
           600,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[0],
           pVariants,
           callback
@@ -364,7 +368,7 @@ function createProducts(cb) {
           600,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[0],
           pVariants,
           callback
@@ -378,7 +382,7 @@ function createProducts(cb) {
           700,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[0],
           pVariants,
           callback
@@ -392,7 +396,7 @@ function createProducts(cb) {
           700,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[0],
           pVariants,
           callback
@@ -406,7 +410,7 @@ function createProducts(cb) {
           60,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[1],
           pVariants,
           callback
@@ -420,7 +424,7 @@ function createProducts(cb) {
           50,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[1],
           pVariants,
           callback
@@ -434,7 +438,7 @@ function createProducts(cb) {
           80,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[1],
           pVariants,
           callback
@@ -448,7 +452,7 @@ function createProducts(cb) {
           60,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[2],
           pVariants,
           callback
@@ -462,7 +466,7 @@ function createProducts(cb) {
           50,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[2],
           pVariants,
           callback
@@ -476,7 +480,7 @@ function createProducts(cb) {
           60,
           100,
           false,
-          authKeys[1],
+          authKeys[0],
           categories[2],
           pVariants,
           callback
@@ -489,7 +493,7 @@ function createProducts(cb) {
           30990,
           100,
           false,
-          authKeys[0],
+          authKeys[1],
           categories[4],
           [variants[17]],
           callback
@@ -503,7 +507,7 @@ function createProducts(cb) {
           18990,
           100,
           false,
-          authKeys[0],
+          authKeys[1],
           categories[4],
           pVariants,
           callback
@@ -516,7 +520,7 @@ function createProducts(cb) {
           17499,
           100,
           false,
-          authKeys[0],
+          authKeys[1],
           categories[5],
           [variants[15]],
           callback
@@ -529,7 +533,7 @@ function createProducts(cb) {
           17999,
           100,
           false,
-          authKeys[0],
+          authKeys[1],
           categories[3],
           [variants[15]],
           callback
