@@ -31,7 +31,8 @@ const NavItem = ({ title, icon, to, selected, setSelected }) => {
 
 function Sidebar() {
   const colorMode = useContext(ColorModeContext);
-  const { isDarkMode, setIsDarkMode, isNavHide, setNavHide } = useNavPage();
+  const { isDarkMode, setIsDarkMode, isNavHide, setNavHide } =
+    useNavPage();
 
   const { user } = useUser();
 
@@ -78,14 +79,17 @@ function Sidebar() {
 
       <section id="content">
         <nav>
-          <i className="bx bx-menu" onClick={() => setNavHide(!isNavHide)} />
+          <i
+            className="bx bx-menu"
+            onClick={() => setNavHide(!isNavHide)}
+          />
 
           <form action="/">
             <div className="form-input">
-              <input type="search" placeholder="Search..." />
+              {/* <input type="search" placeholder="Search..." />
               <button type="submit" className="search-btn">
                 <i className="bx bx-search" />
-              </button>
+              </button> */}
             </div>
           </form>
           <input

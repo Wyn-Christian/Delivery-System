@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@mui/material";
 
 // COMPONENTS
 import Sidebar from "./components/Sidebar";
@@ -13,14 +14,15 @@ import Account from "./pages/Account";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Logout from "./pages/Logout";
-import { useNavPage } from "./contexts/NavPage";
 
-import { ThemeProvider } from "@mui/material";
+import { useNavPage } from "./contexts/NavPage";
+import { useUser } from "./contexts/User";
 import { ColorModeContext, useMode } from "./contexts/Theme";
 
 function App() {
   const [theme, colorMode] = useMode();
   const { isNavHide } = useNavPage();
+  const { user } = useUser();
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -29,7 +31,7 @@ function App() {
           <Sidebar />
           <section id="content" className={`${isNavHide ? "hide" : ""}`}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={user ? <Dashboard /> : <Login />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/products" element={<Products />} />
               <Route path="/checkouts" element={<Checkouts />} />

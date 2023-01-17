@@ -1,9 +1,12 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { Box, useTheme } from "@mui/material";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
-import Header from "../components/Header";
 import { checkoutsMockData } from "../mockData";
+import Header from "../components/Header";
 import { tokens } from "../contexts/Theme";
+import { useUser } from "../contexts/User";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -25,19 +28,32 @@ const InfoCard = ({ title, amount, icon }) => {
 function Dashboard() {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useUser();
+  // const [data, setData] = useState(checkoutsMockData);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:5000/catalog/checkout-items/${user.id}`)
+      .then((res) => {
+        setData(res.data.list_checkout_items);
+      });
+  }, [user.id]);
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "created_at", headerName: "Created At", flex: 1 },
+    { field: "id", headerName: "ID", flex: 2 },
+    { field: "createdAt_formatted", headerName: "Created At", flex: 1 },
     {
-      field: "product_name",
+      field: "product_id",
       headerName: "Product Name",
       flex: 2,
+      valueFormatter: ({ value }) => value.name,
     },
     {
-      field: "variant",
+      field: "variant_id",
       headerName: "Variant",
       flex: 1,
+      valueFormatter: ({ value }) => value.name,
     },
     {
       field: "quantity",
@@ -54,6 +70,7 @@ function Dashboard() {
       align: "left",
       type: "number",
       flex: 1,
+      editable: true,
       valueFormatter: (params) => {
         if (params.value === null) {
           return "₱0";
@@ -143,7 +160,7 @@ function Dashboard() {
           },
         }}
       >
-        <DataGrid rows={checkoutsMockData} columns={columns} />
+        <DataGrid rows={data} columns={columns} />
       </Box>
     </main>
   );

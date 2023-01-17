@@ -1,9 +1,12 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { Box, useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 import { checkoutsMockData } from "../mockData";
 import Header from "../components/Header";
 import { tokens } from "../contexts/Theme";
+import { useUser } from "../contexts/User";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -13,19 +16,39 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 function Checkouts() {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useUser();
+
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:5000/catalog/checkout-items/${user.id}`)
+      .then((res) => {
+        let result = res.data.list_checkout_items.map((v) => {
+          return {
+            ...v,
+            product: v.product_id.name,
+            variant: v.variant_id.name,
+          };
+        });
+        setData(result);
+      });
+  }, [user.id]);
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "created_at", headerName: "Created At", flex: 1 },
+    { field: "id", headerName: "ID", flex: 2 },
+    { field: "createdAt_formatted", headerName: "Created At", flex: 1 },
     {
-      field: "product_name",
+      field: "product",
       headerName: "Product Name",
       flex: 2,
+      // valueFormatter: ({ value }) => value.name,
     },
     {
       field: "variant",
       headerName: "Variant",
       flex: 1,
+      // valueFormatter: ({ value }) => value.name,
     },
     {
       field: "quantity",
@@ -115,7 +138,7 @@ function Checkouts() {
           },
         }}
       >
-        <DataGrid rows={checkoutsMockData} columns={columns} />
+        <DataGrid rows={data} columns={columns} />
       </Box>
     </main>
   );

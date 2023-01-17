@@ -1,22 +1,39 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { Box, useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-import { inventoryMockData } from "../mockData";
 import Header from "../components/Header";
 import { tokens } from "../contexts/Theme";
+import { useUser } from "../contexts/User";
+import { inventoryMockData } from "../mockData";
 
 function Inventory() {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useUser();
+
+  const [data, setData] = useState([]);
+  // const [data, setData] = useState(inventoryMockData);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:5000/catalog/inventories/${user.id}`)
+      .then((res) => {
+        setData(res.data.list_inventories);
+      });
+  }, [user.id]);
 
   const columns = [
-    { field: "id", headerName: "ID (Auth Keys) ", flex: 1, editable: true },
-    { field: "status", headerName: "Status", flex: 1, editable: true },
+    { field: "id", headerName: "ID (Auth Keys) ", flex: 1 },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "status", headerName: "Status", flex: 1 },
     {
-      field: "created_at",
+      field: "createdAt_formatted",
       headerName: "Created At",
-      flex: 1,
+      type: "date",
       editable: true,
+      flex: 1,
     },
   ];
   return (
@@ -68,11 +85,7 @@ function Inventory() {
           },
         }}
       >
-        <DataGrid
-          rows={inventoryMockData}
-          columns={columns}
-          experimentalFeatures={{ newEditingApi: true }}
-        />
+        <DataGrid rows={data} columns={columns} />
       </Box>
     </main>
   );
