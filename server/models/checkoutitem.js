@@ -1,29 +1,27 @@
 const mongoose = require("mongoose");
+const { DateTime } = require("luxon");
 
 const Schema = mongoose.Schema;
 
-const ProductSchema = new Schema(
+const CheckOutItemSchema = new Schema(
   {
-    name: {
-      type: String,
+    quantity: {
+      type: Number,
       required: true,
     },
-    price: {
+    total_price: {
       type: Schema.Types.Decimal128,
       get: getValue,
     },
-    stocks: Number,
-    img_name: String,
 
-    category_id: {
+    product_id: {
       type: Schema.Types.ObjectId,
-      ref: "Category",
-    },
-
-    variant_set_id: {
-      type: mongoose.Types.ObjectId,
+      ref: "Product",
       required: true,
-      ref: "VariantSet",
+    },
+    variant_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Variant",
     },
 
     user_id: {
@@ -35,7 +33,7 @@ const ProductSchema = new Schema(
       ref: "Inventory",
     },
   },
-  { timestamps: true, id: true, toJSON: { getters: true } }
+  { timestamps: true, toJSON: { getters: true } }
 );
 
 function getValue(value) {
@@ -45,8 +43,8 @@ function getValue(value) {
   return value;
 }
 
-ProductSchema.virtual("url").get(function () {
-  return `/catalog/product/${this._id}`;
+CheckOutItemSchema.virtual("createdAt_formatted").get(function () {
+  return DateTime.fromJSDate(this.createdAt).toFormat("yyyy-MM-dd");
 });
 
-module.exports = mongoose.model("Product", ProductSchema);
+module.exports = mongoose.model("CheckOutItem", CheckOutItemSchema);

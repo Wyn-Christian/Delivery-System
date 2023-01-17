@@ -11,8 +11,10 @@ const cors = require("cors");
 // Import routes hahahah
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-var authKeyRouter = require("./routes/api");
-const catalogRouter = require("./routes/catalog"); //Import routes for "catalog" area of site
+// var authKeyRouter = require("./routes/api");
+//Import routes for "catalog" area of site
+var catalogRouter = require("./routes/catalog");
+var apiRouter = require("./routes/api");
 
 var app = express();
 
@@ -21,12 +23,15 @@ const mongoose = require("mongoose");
 
 mongoose.set("toJSON", { virtuals: true });
 
-const selected_db = "admin-test-1";
+const selected_db = "inventory_test";
 
 const dev_db_url = `mongodb+srv://MyFirstMongo:1234@myfirstmongo.3pf8i.mongodb.net/${selected_db}?retryWrites=true&w=majority`;
 const mongoDB = process.env.MONGODB_URI || dev_db_url;
 
-mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(mongoDB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
@@ -42,8 +47,9 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/api", authKeyRouter);
+// app.use("/api", authKeyRouter);
 app.use("/catalog", catalogRouter); // Add catalog routes to middleware chain.
+app.use("/api", apiRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -1,5 +1,3 @@
-const { default: mongoose } = require("mongoose");
-const { body, validationResult } = require("express-validator");
 const async = require("async");
 
 const Product = require("../models/product");
@@ -28,12 +26,50 @@ exports.counts = function (req, res, next) {
 
 // Get list of all products
 exports.list = (req, res, next) => {
-  Product.find({
-    auth_key: req.query.api_key,
-  })
-    .lean()
-    .populate("category_id", "api_id name")
-    .populate("variants_id", "api_id name price_multiplier")
+  Product.find({})
+    .populate("category_id")
+    .populate("variant_set_id")
+    .populate("user_id")
+    .exec((err, list_products) => {
+      if (err) return next(err);
+
+      // Success
+      res.json({
+        list_products,
+      });
+    });
+};
+
+exports.user_list = (req, res, next) => {
+  Product.find({ user_id: req.params.user_id })
+    .populate("category_id")
+    .populate({
+      path: "variant_set_id",
+      populate: {
+        path: "variants_id",
+        model: "Variant",
+      },
+    })
+    .exec((err, list_products) => {
+      if (err) return next(err);
+
+      // Success
+      res.json({
+        list_products,
+      });
+    });
+};
+
+exports.inventory_list = (req, res, next) => {
+  Product.find({ inventory_id: req.params.inventory_id })
+    .populate("category_id")
+    .populate({
+      path: "variant_set_id",
+      populate: {
+        path: "variants_id",
+        model: "Variant",
+      },
+    })
     .exec((err, list_products) => {
       if (err) return next(err);
 
@@ -46,79 +82,47 @@ exports.list = (req, res, next) => {
 
 // Get details for a specific product
 exports.detail = (req, res, next) => {
-  let query = {
-    auth_key: req.query.api_key,
-  };
-  if (mongoose.isValidObjectId(req.params.id)) {
-    query._id = req.params.id;
-  } else {
-    query.api_id = req.params.id;
-  }
-  Product.findOne(query)
-    .lean()
-    .populate("category_id", "api_id name")
-    .populate("variants_id", "api_id name price_multiplier")
+  Product.findById(req.params.id)
+    .populate("category_id")
+    .populate("variant_set_id")
+    .populate("variants_id")
     .exec((err, product) => {
       if (err) return next(err);
 
       // Success
-      res.json({
-        product,
-      });
+      res.json({ product });
     });
 };
 
-// Handle product create on POST
-exports.create = [
-  // Convert the variant to an array
-  (req, res, next) => {
-    if (!Array.isArray(req.body.variants)) {
-      req.body.variants =
-        typeof req.body.variants === "undefined" ? [] : [req.body.variants];
-    }
-    if (!Array.isArray(req.body.image_path)) {
-      req.body.image_path =
-        typeof req.body.image_path === "undefined" ? [] : [req.body.image_path];
-    }
-    next();
-  },
-  // Validate and Sanitize fields
-  body("name", "Name must not be empty").trim().isLength({ min: 1 }).escape(),
+exports.create = (req, res, next) => {
+  const new_product = new Product({
+    _id: req.body.id,
+    name: req.body.name,
+    price: req.body.price,
+    stocks: req.body.stocks,
+    img_name: req.body.img_name,
 
-  // Process request after validation and sanitization
-  (req, res, next) => {
-    // Extract the validation errors from a request
-    const errors = validationResult(req);
+    category_id: req.body.category_id,
+    variant_set_id: req.body.variant_set_id,
 
-    // Create a Product object with escaped and trimmed data
-    const new_product = new Product({
-      api_id: req.body.api_id,
-      name: req.body.name,
-      price: req.body.price,
-      stocks: req.body.stocks,
-      image_path: req.body.image_path,
-      category_id: req.body.category,
-      variants_id: req.body.variants,
-      auth_key: req.body.api_key,
-    });
+    user_id: req.body.user_id,
+    inventory_id: req.body.inventory_id,
 
-    if (!errors.isEmpty()) {
-      // There are errors.
-      return res.json(errors);
-    }
+    api_id: req.body.api_id,
+    image_path: req.body.image_path,
+    variants_id: req.body.variants,
+    auth_key: req.body.api_key,
+  });
 
-    // Data from form is valid. Save product
-    new_product.save((err) => {
-      if (err) return next(err);
+  new_product.save((err) => {
+    if (err) return next(err);
 
-      // Success: return the json
-      res.json({ new_product });
-      return;
-    });
-  },
-];
+    // Success: return the json
+    res.json({ new_product });
+    return;
+  });
+};
 
-// Handle product delete on POST
 exports.delete = (req, res, next) => {
   Product.findByIdAndDelete(req.params.id, (err, removed_product) => {
     if (err) return next(err);
@@ -134,59 +138,35 @@ exports.delete = (req, res, next) => {
   });
 };
 
-// Handle product update on POST
-exports.update = [
-  // Convert the variant to an array
-  (req, res, next) => {
-    if (!Array.isArray(req.body.variants)) {
-      req.body.variants =
-        typeof req.body.variants === "undefined" ? [] : [req.body.variants];
-    }
-    if (!Array.isArray(req.body.image_path)) {
-      req.body.image_path =
-        typeof req.body.image_path === "undefined" ? [] : [req.body.image_path];
-    }
-    next();
-  },
-  // Validate and Sanitize fields
-  body("name").trim().escape(),
+exports.update = (req, res, next) => {
+  const product = {
+    name: req.body.name,
+    price: req.body.price,
+    stocks: req.body.stocks,
+    img_name: req.body.img_name,
 
-  // Process request after validation and sanitization
-  (req, res, next) => {
-    // Extract the validation errors from a request
-    const errors = validationResult(req);
+    category_id: req.body.category_id,
+    variant_set_id: req.body.variant_set_id,
 
-    // Create a Product object with escaped and trimmed data
-    const product = {
-      api_id: req.body.api_id,
-      name: req.body.name,
-      price: req.body.price,
-      stocks: req.body.stocks,
-      image_path: req.body.image_path,
-      category_id: req.body.category,
-    };
-    if (req.body.variants.length != 0) {
-      product.variants_id = req.body.variants;
+    user_id: req.body.user_id,
+    inventory_id: req.body.inventory_id,
+
+    api_id: req.body.api_id,
+    image_path: req.body.image_path,
+    variants_id: req.body.variants,
+    auth_key: req.body.api_key,
+  };
+
+  Product.findByIdAndUpdate(
+    req.params.id,
+    product,
+    { new: true },
+    (err, updated_product) => {
+      if (err) return next(err);
+
+      // Success: return the json
+      res.json({ updated_product });
+      return;
     }
-    if (!errors.isEmpty()) {
-      // There are errors.
-      const err = new Error(errors);
-      err.status = 404;
-      return res.json(err);
-    }
-
-    // Data from form is valid. Save product
-    Product.findByIdAndUpdate(
-      req.params.id,
-      product,
-      { new: true },
-      (err, updated_product) => {
-        if (err) return next(err);
-
-        // Success: return the json
-        res.json({ updated_product });
-        return;
-      }
-    );
-  },
-];
+  );
+};

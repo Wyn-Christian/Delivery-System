@@ -15,36 +15,42 @@ if (!userArgs[0].startsWith('mongodb')) {
 var async = require("async");
 
 var User = require("./models/user");
-var AuthKey = require("./models/authKey");
-var Product = require("./models/product");
-var Category = require("./models/category");
+var Inventory = require("./models/inventory");
 var Variant = require("./models/variant");
-var Checkout = require("./models/checkout");
+var VariantSet = require("./models/variantset");
+var Category = require("./models/category");
+var Product = require("./models/product");
+var CheckoutItem = require("./models/checkoutitem");
 
 var mongoose = require("mongoose");
-const checkout = require("./models/checkout");
 var mongoDB = userArgs[0];
-mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(mongoDB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
-var users = [];
 var authKeys = [];
-var categories = [];
-var variants = [];
-var products = [];
 var checkouts = [];
+
+var users = [];
+var inventories = [];
+var variants = [];
+var variant_sets = [];
+var categories = [];
+var products = [];
+var checkout_items = [];
 
 function userCreate(username, first_name, last_name, email, password, cb) {
   userdetail = {
     first_name,
+    last_name,
     email,
     username,
     password,
   };
-
-  if (last_name != false) userdetail.last_name = last_name;
 
   var user = new User(userdetail);
 
@@ -60,27 +66,29 @@ function userCreate(username, first_name, last_name, email, password, cb) {
   });
 }
 
-function authKeyCreate(user_id, name, status, cb) {
-  let authKeydetail = { status, user_id, name };
+function inventoryCreate(name, status, user_id, cb) {
+  let inventoryDetail = { name, user_id, status };
 
-  var authKey = new AuthKey(authKeydetail);
-  authKey.save(function (err) {
+  var inventory = new Inventory(inventoryDetail);
+  inventory.save(function (err) {
     if (err) {
       cb(err, null);
       return;
     }
-    console.log(`New Auth key: ${authKey}`);
-    authKeys.push(authKey);
-    cb(null, authKey);
+
+    console.log(`New Inventory: ${inventory}`);
+    inventories.push(inventory);
+    cb(null, inventory);
   });
 }
 
-function categoryCreate(api_id, name, auth_key, cb) {
-  categorydetail = {
+function categoryCreate(_id, name, user_id, inventory_id, cb) {
+  var categorydetail = {
+    _id,
     name,
-    auth_key,
+    user_id,
+    inventory_id,
   };
-  if (api_id != false) categorydetail.api_id = api_id;
 
   var category = new Category(categorydetail);
 
@@ -95,9 +103,21 @@ function categoryCreate(api_id, name, auth_key, cb) {
   });
 }
 
-function variantCreate(api_id, name, price_multiplier, auth_key, cb) {
-  var variantdetail = { name, price_multiplier, auth_key };
-  if (api_id != false) variantdetail.api_id = api_id;
+function variantCreate(
+  _id,
+  name,
+  price_multiplier,
+  user_id,
+  inventory_id,
+  cb
+) {
+  var variantdetail = {
+    _id,
+    name,
+    price_multiplier,
+    user_id,
+    inventory_id,
+  };
 
   var variant = new Variant(variantdetail);
 
@@ -106,33 +126,66 @@ function variantCreate(api_id, name, price_multiplier, auth_key, cb) {
       cb(err, null);
       return;
     }
+
     console.log(`New Variant: ${variant}`);
     variants.push(variant);
     cb(null, variant);
   });
 }
 
+function variantSetCreate(
+  _id,
+  name,
+  variants_id,
+  user_id,
+  inventory_id,
+  cb
+) {
+  var variantdetail = {
+    _id,
+    name,
+    variants_id,
+    user_id,
+    inventory_id,
+  };
+
+  var variantset = new VariantSet(variantdetail);
+
+  variantset.save((err) => {
+    if (err) {
+      cb(err, null);
+      return;
+    }
+
+    console.log(`New Variant Set: ${variantset}`);
+    variant_sets.push(variantset);
+    cb(null, variantset);
+  });
+}
+
 function productCreate(
-  api_id,
+  _id,
   name,
   price,
   stocks,
-  image_path,
-  auth_key,
+  img_name,
   category_id,
-  variants_id,
+  variant_set_id,
+  user_id,
+  inventory_id,
   cb
 ) {
   let productdetail = {
+    _id,
     name,
     price,
     stocks,
-    auth_key,
+    img_name,
+    category_id,
+    variant_set_id,
+    user_id,
+    inventory_id,
   };
-  if (api_id != false) productdetail.api_id = api_id;
-  if (image_path != false) productdetail.image_path = image_path;
-  if (category_id != false) productdetail.category_id = category_id;
-  if (variants_id != false) productdetail.variants_id = variants_id;
 
   let product = new Product(productdetail);
 
@@ -148,45 +201,50 @@ function productCreate(
   });
 }
 
-function checkoutCreate(
-  api_id,
+function checkoutItemCreate(
+  _id,
   quantity,
   total_price,
   product_id,
   variant_id,
+  user_id,
+  inventory_id,
   cb
 ) {
   let checkoutdetail = {
+    _id,
     quantity,
     total_price,
     product_id,
+    variant_id,
+    user_id,
+    inventory_id,
   };
-  if (api_id != false) checkoutdetail.api_id = api_id;
-  if (variant_id != false) checkoutdetail.variant_id = variant_id;
 
-  let checkout = new Checkout(checkoutdetail);
+  let checkoutItem = new CheckoutItem(checkoutdetail);
 
-  checkout.save((err) => {
+  checkoutItem.save((err) => {
     if (err) {
       cb(err, null);
       return;
     }
 
-    console.log(`New Check Out: ${checkout}`);
-    checkouts.push(checkout);
-    cb(null, checkout);
+    console.log(`New Check out Item: ${checkoutItem}`);
+    checkouts.push(checkoutItem);
+    cb(null, checkoutItem);
   });
 }
 
-function createUser(cb) {
+// Create datas
+function createUsers(cb) {
   async.series(
     [
       function (callback) {
         userCreate(
-          "wyn-sample",
-          "Wyn",
-          "Rebanal",
-          "wyn@sample.com",
+          "admin-sample",
+          "Admin",
+          "Sample",
+          "admin@sample.com",
           "1234",
           callback
         );
@@ -207,20 +265,17 @@ function createUser(cb) {
   );
 }
 
-function createAuthKeys(cb) {
+function createInventories(cb) {
   async.series(
     [
       function (callback) {
-        authKeyCreate(users[0], "Bakery Inventory", "Active", callback);
+        inventoryCreate("Bakery Shop", "Active", users[0], callback);
       },
       function (callback) {
-        authKeyCreate(users[0], "Phone Stocks", "Active", callback);
+        inventoryCreate("Phones", "Active", users[0], callback);
       },
       function (callback) {
-        authKeyCreate(users[1], "First Sample Store", "Inactive", callback);
-      },
-      function (callback) {
-        authKeyCreate(users[1], "Second Sample Store", "Active", callback);
+        inventoryCreate("Sample", "Inactive", users[1], callback);
       },
     ],
     cb
@@ -231,22 +286,31 @@ function createCategories(cb) {
   async.series(
     [
       function (callback) {
-        categoryCreate(1, "cake", authKeys[0], callback);
+        categoryCreate(
+          "63c4f67621b3339c351184c5",
+          "cake",
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        categoryCreate(2, "cookie", authKeys[0], callback);
+        categoryCreate(
+          "63c4f67f21b3339c351184c7",
+          "cookie",
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        categoryCreate(3, "pastry", authKeys[0], callback);
-      },
-      function (callback) {
-        categoryCreate(false, "Xiaomi", authKeys[1], callback);
-      },
-      function (callback) {
-        categoryCreate(false, "Poco", authKeys[1], callback);
-      },
-      function (callback) {
-        categoryCreate(false, "Redmi", authKeys[1], callback);
+        categoryCreate(
+          "63c4f68321b3339c351184c9",
+          "pastry",
+          users[0],
+          inventories[0],
+          callback
+        );
       },
     ],
     cb
@@ -257,58 +321,184 @@ function createVariants(cb) {
   async.series(
     [
       function (callback) {
-        variantCreate(1, "6 x 8", 1, authKeys[0], callback);
+        // 0
+        variantCreate(
+          "63c4fb0eed8afadb233a6a10",
+          "6 x 8",
+          1,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(2, "8 x 10", 1.2, authKeys[0], callback);
+        // 1
+        variantCreate(
+          "63c4fb1eed8afadb233a6a12",
+          "8 x 10",
+          1.2,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(3, "10 x 12", 1.4, authKeys[0], callback);
+        // 2
+        variantCreate(
+          "63c4fb25ed8afadb233a6a14",
+          "10 x 12",
+          1.4,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(4, "5 pcs", 1, authKeys[0], callback);
+        // 3
+        variantCreate(
+          "63c4fb2aed8afadb233a6a16",
+          "5 pcs",
+          1,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(5, "10 pcs", 1.8, authKeys[0], callback);
+        // 4
+        variantCreate(
+          "63c4fb31ed8afadb233a6a18",
+          "10 pcs",
+          1.8,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(6, "20 pcs", 2.8, authKeys[0], callback);
+        // 5
+        variantCreate(
+          "63c4fb36ed8afadb233a6a1a",
+          "20 pcs",
+          2.8,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(7, "2 pcs", 1, authKeys[0], callback);
+        // 6
+        variantCreate(
+          "63c4fb3eed8afadb233a6a1c",
+          "2 pcs",
+          1,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(8, "4 pcs", 1.8, authKeys[0], callback);
+        // 7
+        variantCreate(
+          "63c4fb44ed8afadb233a6a1e",
+          "4 pcs",
+          1.8,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(9, "6 pcs", 2.8, authKeys[0], callback);
+        // 8
+        variantCreate(
+          "63c4fb48ed8afadb233a6a20",
+          "6 pcs",
+          2.8,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(10, "6 pcs", 1, authKeys[0], callback);
+        // 9
+        variantCreate(
+          "63c4fb4ded8afadb233a6a22",
+          "6 pcs",
+          1,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(11, "12 pcs", 1.8, authKeys[0], callback);
+        // 10
+        variantCreate(
+          "63c4fb53ed8afadb233a6a24",
+          "12 pcs",
+          1.8,
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(12, "24 pcs", 2.8, authKeys[0], callback);
+        // 11
+        variantCreate(
+          "63c4fb58ed8afadb233a6a26",
+          "20 pcs",
+          2.8,
+          users[0],
+          inventories[0],
+          callback
+        );
+      },
+    ],
+    cb
+  );
+}
+
+function createVariantSets(cb) {
+  async.series(
+    [
+      function (callback) {
+        variantSetCreate(
+          "63c500040251c0798b612d2e",
+          "First set",
+          [variants[0], variants[1], variants[2]],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(false, "4ram/64gb", 1, authKeys[1], callback);
+        variantSetCreate(
+          "63c5050d0251c0798b612d34",
+          "Second set",
+          [variants[3], variants[4], variants[5]],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(false, "4ram/128gb", 1, authKeys[1], callback);
+        variantSetCreate(
+          "63c505480251c0798b612d37",
+          "Third set",
+          [variants[6], variants[7], variants[8]],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        variantCreate(false, "6ram/128gb", 1, authKeys[1], callback);
-      },
-      function (callback) {
-        variantCreate(false, "8ram/128gb", 1, authKeys[1], callback);
-      },
-      function (callback) {
-        variantCreate(false, "8ram/256gb", 1, authKeys[1], callback);
-      },
-      function (callback) {
-        variantCreate(false, "12ram/256gb", 1, authKeys[1], callback);
+        variantSetCreate(
+          "63c5055f0251c0798b612d39",
+          "Fourth set",
+          [variants[9], variants[10], variants[11]],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
     ],
     cb
@@ -319,223 +509,182 @@ function createProducts(cb) {
   async.series(
     [
       function (callback) {
-        pVariants = variants.slice(0, 3);
+        // 0
         productCreate(
-          1,
+          "63c50ce24e5539c223d5a9db",
           "Carrot",
           600,
           100,
-          false,
-          authKeys[0],
+          "carrot.png",
           categories[0],
-          pVariants,
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(0, 3);
+        // 1
         productCreate(
-          2,
+          "63c50d414e5539c223d5a9dd",
           "Chocolate Fudge",
           600,
           100,
-          false,
-          authKeys[0],
+          "chocofudge.png",
           categories[0],
-          pVariants,
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(0, 3);
+        // 2
         productCreate(
-          3,
+          "63c50d514e5539c223d5a9df",
           "Marble",
           600,
           100,
-          false,
-          authKeys[0],
+          "marble.png",
           categories[0],
-          pVariants,
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(0, 3);
+        // 3
         productCreate(
-          4,
+          "63c50ff14afe16e87ce8fe18",
           "Red Velvet",
           600,
           100,
-          false,
-          authKeys[0],
+          "redvelvet.png",
           categories[0],
-          pVariants,
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(0, 3);
+        // 4
         productCreate(
-          5,
+          "63c50ff94afe16e87ce8fe1a",
           "Tiramisu",
           700,
           100,
-          false,
-          authKeys[0],
+          "tiramisu.png",
           categories[0],
-          pVariants,
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(0, 3);
+        // 5
         productCreate(
-          6,
+          "63c510004afe16e87ce8fe1c",
           "Ube",
           700,
           100,
-          false,
-          authKeys[0],
+          "ube.png",
           categories[0],
-          pVariants,
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(3, 6);
+        // 6
         productCreate(
-          7,
+          "63c510654afe16e87ce8fe1e",
           "Chocolate Chip",
           60,
           100,
-          false,
-          authKeys[0],
+          "chocochip.png",
           categories[1],
-          pVariants,
+          variant_sets[1],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(3, 6);
+        // 7
         productCreate(
-          8,
+          "63c5106d4afe16e87ce8fe20",
           "Chocolate Crinkles",
           50,
           100,
-          false,
-          authKeys[0],
+          "chococringles.png",
           categories[1],
-          pVariants,
+          variant_sets[1],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(3, 6);
+        // 8
         productCreate(
-          9,
+          "63c510744afe16e87ce8fe22",
           "Gingerbread",
           80,
           100,
-          false,
-          authKeys[0],
+          "gingerbread.png",
           categories[1],
-          pVariants,
+          variant_sets[1],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(6, 9);
+        // 9
         productCreate(
-          10,
+          "63c510914afe16e87ce8fe24",
           "Egg Tart",
           60,
           100,
-          false,
-          authKeys[0],
+          "eggtart.png",
           categories[2],
-          pVariants,
+          variant_sets[2],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(3, 6);
+        // 10
         productCreate(
-          11,
-          "Macaron",
+          "63c510ba4afe16e87ce8fe26",
+          "Macarons",
           50,
           100,
-          false,
-          authKeys[0],
+          "macaron.png",
           categories[2],
-          pVariants,
+          variant_sets[3],
+          users[0],
+          inventories[0],
           callback
         );
       },
       function (callback) {
-        pVariants = variants.slice(9, 12);
+        // 11
         productCreate(
-          12,
+          "63c510df4afe16e87ce8fe28",
           "Soft Pretzel",
           60,
           100,
-          false,
-          authKeys[0],
+          "pretzel.png",
           categories[2],
-          pVariants,
-          callback
-        );
-      },
-      function (callback) {
-        productCreate(
-          false,
-          "POCO F4 GT",
-          30990,
-          100,
-          false,
-          authKeys[1],
-          categories[4],
-          [variants[17]],
-          callback
-        );
-      },
-      function (callback) {
-        pVariants = variants.slice(15, 17);
-        productCreate(
-          false,
-          "POCO X4 GT",
-          18990,
-          100,
-          false,
-          authKeys[1],
-          categories[4],
-          pVariants,
-          callback
-        );
-      },
-      function (callback) {
-        productCreate(
-          false,
-          "Redmi Note 11 Pro",
-          17499,
-          100,
-          false,
-          authKeys[1],
-          categories[5],
-          [variants[15]],
-          callback
-        );
-      },
-      function (callback) {
-        productCreate(
-          false,
-          "Xiaomi 11T",
-          17999,
-          100,
-          false,
-          authKeys[1],
-          categories[3],
-          [variants[15]],
+          variant_sets[0],
+          users[0],
+          inventories[0],
           callback
         );
       },
@@ -544,83 +693,104 @@ function createProducts(cb) {
   );
 }
 
-function createCheckouts(cb) {
+function createCheckoutItems(cb) {
   async.series(
     [
       function (callback) {
-        checkoutCreate(1, 3, 432, products[8], variants[4], callback);
+        checkoutItemCreate(
+          "63c545f33c9d3d58ca67d593",
+          1,
+          144,
+          products[8],
+          variants[4],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(2, 5, 3600, products[0], variants[1], callback);
+        checkoutItemCreate(
+          "63c546e67745ad6584be5fa9",
+          1,
+          108,
+          products[6],
+          variants[4],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(3, 2, 1400, products[5], variants[2], callback);
+        checkoutItemCreate(
+          "63c51fbfc69c29b7d51ae89e",
+          3,
+          1800,
+          products[2],
+          variants[0],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(4, 2, 1959.99, products[3], variants[2], callback);
+        checkoutItemCreate(
+          "63c544643ce96259d2edbc50",
+          1,
+          50,
+          products[10],
+          variants[3],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(5, 2, 1200, products[0], variants[0], callback);
+        checkoutItemCreate(
+          "63c5578a57fd60b7a82133f5",
+          1,
+          90,
+          products[11],
+          variants[10],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(6, 2, 448, products[8], variants[5], callback);
+        checkoutItemCreate(
+          "63c5533457fd60b7a82133a7",
+          1,
+          90,
+          products[10],
+          variants[4],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(7, 1, 168, products[6], variants[5], callback);
+        checkoutItemCreate(
+          "63c5535157fd60b7a82133ac",
+          1,
+          840,
+          products[5],
+          variants[1],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
       function (callback) {
-        checkoutCreate(8, 2, 1400, products[5], variants[0], callback);
-      },
-      function (callback) {
-        checkoutCreate(9, 2, 1959.99, products[3], variants[2], callback);
-      },
-      function (callback) {
-        checkoutCreate(10, 2, 1200, products[0], variants[0], callback);
-      },
-      function (callback) {
-        checkoutCreate(11, 2, 448, products[8], variants[5], callback);
-      },
-      function (callback) {
-        checkoutCreate(12, 1, 168, products[6], variants[5], callback);
-      },
-      function (callback) {
-        checkoutCreate(13, 2, 1400, products[5], variants[0], callback);
-      },
-      function (callback) {
-        checkoutCreate(14, 2, 1959.99, products[3], variants[2], callback);
-      },
-      function (callback) {
-        checkoutCreate(15, 2, 1200, products[0], variants[0], callback);
-      },
-      function (callback) {
-        checkoutCreate(16, 2, 448, products[8], variants[5], callback);
-      },
-      function (callback) {
-        checkoutCreate(17, 1, 168, products[6], variants[5], callback);
-      },
-      function (callback) {
-        checkoutCreate(18, 1, 720, products[0], variants[1], callback);
-      },
-      function (callback) {
-        checkoutCreate(19, 4, 3360, products[5], variants[1], callback);
-      },
-      function (callback) {
-        checkoutCreate(20, 2, 1680, products[3], variants[1], callback);
-      },
-      function (callback) {
-        checkoutCreate(21, 1, 700, products[4], variants[0], callback);
-      },
-      function (callback) {
-        checkoutCreate(22, 1, 979.99, products[5], variants[2], callback);
-      },
-      function (callback) {
-        checkoutCreate(23, 1, 720, products[1], variants[1], callback);
-      },
-      function (callback) {
-        checkoutCreate(24, 1, 90, products[10], variants[4], callback);
-      },
-      function (callback) {
-        checkoutCreate(25, 1, 720, products[0], variants[1], callback);
+        checkoutItemCreate(
+          "63c5477a7745ad6584be5ffd",
+          1,
+          840,
+          products[4],
+          variants[1],
+          users[0],
+          inventories[0],
+          callback
+        );
       },
     ],
     cb
@@ -629,19 +799,21 @@ function createCheckouts(cb) {
 
 async.series(
   [
-    createUser,
-    createAuthKeys,
-    createCategories,
+    createUsers,
+    createInventories,
     createVariants,
+    createVariantSets,
+    createCategories,
     createProducts,
-    createCheckouts,
+    createCheckoutItems,
   ],
   function (err, results) {
     if (err) {
       console.log(`FINAL ERR: ${err}`);
     } else {
       console.log(`Products: ${products}`);
-      console.log(`Checkouts: ${checkouts}`);
+      console.log(`Checkout Items: ${checkouts}`);
+      console.log(`Result: ${results}`);
     }
     mongoose.connection.close();
   }

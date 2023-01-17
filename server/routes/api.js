@@ -1,13 +1,14 @@
-const express = require("express");
-const router = express.Router();
+var express = require("express");
+var router = express.Router();
 
-const authKey_controller = require("../controllers/authKey");
+const api_controller = require("../controllers/api");
 
-/// AUTH KEY ROUTES ///
-router.post("/create", authKey_controller.create);
-router.post("/:id/delete", authKey_controller.delete);
-router.post("/:id/update", authKey_controller.update);
-router.get("/:id", authKey_controller.detail);
-router.get("/", authKey_controller.list);
+// get products
+router.get("/:api_id/products", api_controller.products);
+router.get("/:api_id/stocks", api_controller.stocks);
+router.post(
+  "/:api_id/add-checkout-items",
+  api_controller.add_checkout_items
+);
 
 module.exports = router;

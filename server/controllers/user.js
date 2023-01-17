@@ -12,60 +12,48 @@ exports.list = function (req, res, next) {
   });
 };
 
-// Get details for a specific user
 exports.detail = (req, res, next) => {
-  // res.send(`NOT IMPLEMENTED: user detail: ${req.params.id}`);
-  User.findOne({ _id: req.params.id }, (err, user) => {
+  User.findById(req.params.id, (err, user) => {
     if (err) return next(err);
 
     res.json({ user });
   });
 };
 
-// Handle user create on POST
-exports.create = [
-  body("first_name", "First Name must not be empty")
-    .trim()
-    .isString()
-    .isLength({ min: 1 })
-    .escape(),
-  body("last_name", "Last Name must be valid input").trim().isString().escape(),
-  body("email", "Email must not be empty").trim().isEmail().normalizeEmail(),
-  body("password", "Password must not be empty").trim().isLength({ min: 5 }),
-  body("birthday", "Invalid Date")
-    .optional({ checkFalsy: true })
-    .isISO8601()
-    .toDate(),
-
-  (req, res, next) => {
-    const errors = validationResult(req);
-
-    const new_user = new User({
-      first_name: req.body.first_name,
-      last_name: req.body.last_name,
-      age: req.body.age,
-      birthday: req.body.birthday,
-      email: req.body.email,
+exports.login = (req, res, next) => {
+  User.find(
+    {
+      username: req.body.username,
       password: req.body.password,
-    });
-
-    if (!errors.isEmpty()) {
-      // There are errors.
-      return res.json(errors);
-    }
-
-    // Data from form is valid. Save product
-    new_user.save((err) => {
+    },
+    (err, user) => {
       if (err) return next(err);
 
-      // Success: return the json
-      res.json({ new_user });
-      return;
-    });
-  },
-];
+      res.json(user);
+    }
+  );
+};
 
-// Handle user delete on POST
+exports.create = (req, res, next) => {
+  const new_user = new User({
+    first_name: req.body.first_name,
+    last_name: req.body.last_name,
+    email: req.body.email,
+
+    username: req.body.username,
+    password: req.body.password,
+  });
+
+  // Data from form is valid. Save product
+  new_user.save((err) => {
+    if (err) return next(err);
+
+    // Success: return the json
+    res.json({ new_user });
+    return;
+  });
+};
+
 exports.delete = (req, res, next) => {
   User.findByIdAndDelete(req.params.id, (err, removed_user) => {
     if (err) return next(err);
@@ -82,60 +70,26 @@ exports.delete = (req, res, next) => {
 };
 
 // Handle user update on POST
-exports.update = [
-  body("first_name", "First Name must be valid format")
-    .optional({ checkFalsy: true })
-    .trim()
-    .isString()
-    .isLength({ min: 1 })
-    .escape(),
-  body("last_name", "Last Name must be valid input")
-    .optional({ checkFalsy: true })
-    .trim()
-    .isString()
-    .escape(),
-  body("email", "Email must be valid format")
-    .trim()
-    .isEmail()
-    .normalizeEmail()
-    .optional({ checkFalsy: true }),
-  body("password", "Password must be valid format")
-    .optional({ checkFalsy: true })
-    .trim()
-    .isLength({ min: 5 }),
-  body("birthday", "Invalid Date")
-    .optional({ checkFalsy: true })
-    .isISO8601()
-    .toDate(),
+exports.update = (req, res, next) => {
+  const user = {
+    first_name: req.body.first_name,
+    last_name: req.body.last_name,
+    email: req.body.email,
 
-  (req, res, next) => {
-    const errors = validationResult(req);
+    username: req.body.username,
+    password: req.body.password,
+  };
 
-    const user = {
-      first_name: req.body.first_name,
-      last_name: req.body.last_name,
-      age: req.body.age,
-      birthday: req.body.birthday,
-      email: req.body.email,
-      password: req.body.password,
-    };
+  User.findByIdAndUpdate(
+    req.params.id,
+    user,
+    { new: true },
+    (err, updated_user) => {
+      if (err) return next(err);
 
-    if (!errors.isEmpty()) {
-      // There are errors.
-      return res.json(errors);
+      // Success, return the updated document
+      res.json({ updated_user });
+      return;
     }
-
-    User.findByIdAndUpdate(
-      req.params.id,
-      user,
-      { new: true },
-      (err, updated_user) => {
-        if (err) return next(err);
-
-        // Success, return the updated document
-        res.json({ updated_user });
-        return;
-      }
-    );
-  },
-];
+  );
+};

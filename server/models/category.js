@@ -4,18 +4,22 @@ const Schema = mongoose.Schema;
 
 const CategorySchema = new Schema(
   {
-    api_id: Number,
     name: {
       type: String,
       required: true,
       trim: true,
     },
-    auth_key: {
+
+    user_id: {
       type: Schema.Types.ObjectId,
-      ref: "AuthKey",
+      ref: "User",
+    },
+    inventory_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Inventory",
     },
   },
-  { timestamps: true, id: false }
+  { timestamps: true }
 );
 
 CategorySchema.virtual("url").get(function () {

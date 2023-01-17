@@ -4,20 +4,32 @@ const Schema = mongoose.Schema;
 
 const VariantSchema = new Schema(
   {
-    api_id: Number,
     name: { type: String, required: true },
     price_multiplier: {
       type: Schema.Types.Decimal128,
       required: true,
       default: 1,
+      get: getValue,
     },
-    auth_key: {
+
+    user_id: {
       type: Schema.Types.ObjectId,
-      ref: "AuthKey",
+      ref: "User",
+    },
+    inventory_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Inventory",
     },
   },
-  { timestamps: true, id: false }
+  { timestamps: true, toJSON: { getters: true } }
 );
+
+function getValue(value) {
+  if (typeof value !== "undefined") {
+    return parseFloat(value.toString());
+  }
+  return value;
+}
 
 VariantSchema.virtual("url").get(function () {
   return `/catalog/variant/${this._id}`;
