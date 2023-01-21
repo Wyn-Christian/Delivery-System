@@ -9,14 +9,7 @@ import axios from "axios";
 // User Custom Hooks
 export const useUserSource = () => {
   const ports = usePorts();
-  const [user, setUser] = useState({
-    id: "63c696af30257e3cc3447a27",
-    username: "admin",
-    first_name: "Admin",
-    last_name: "Sample",
-    email: "admin@sample.com",
-    password: "1234",
-  });
+  const [user, setUser] = useState(undefined);
   const [inventories, setInventories] = useState([]);
 
   const navigate = useNavigate();

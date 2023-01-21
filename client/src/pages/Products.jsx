@@ -1,8 +1,10 @@
 import { Box, useTheme } from "@mui/material";
+import Button from "@mui/material/Button";
 import {
   DataGrid,
   GridActionsCellItem,
   GridRowModes,
+  GridToolbarContainer,
 } from "@mui/x-data-grid";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -22,15 +24,67 @@ import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Close";
 
+var mongoObjectId = function () {
+  var timestamp = ((new Date().getTime() / 1000) | 0).toString(16);
+  return (
+    timestamp +
+    "xxxxxxxxxxxxxxxx"
+      .replace(/[x]/g, function () {
+        return ((Math.random() * 16) | 0).toString(16);
+      })
+      .toLowerCase()
+  );
+};
+
+function EditToolbar(props) {
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+
+  const { setData, setRowModesModel } = props;
+
+  let id = mongoObjectId();
+  const handleClick = () => {
+    setData((oldRows) => [
+      ...oldRows,
+      { id: id, name: "", category: "cake", isNew: true },
+    ]);
+    setRowModesModel((oldModel) => ({
+      ...oldModel,
+      [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
+    }));
+  };
+
+  return (
+    <GridToolbarContainer>
+      <Button
+        startIcon={<AddIcon />}
+        onClick={handleClick}
+        variant="contained"
+        sx={{
+          backgroundColor: colors.dark,
+          color: colors.light,
+          "&:hover": {
+            backgroundColor: colors.darkGrey,
+            color: colors.dark,
+          },
+        }}
+      >
+        Add Product
+      </Button>
+    </GridToolbarContainer>
+  );
+}
+
 function Products() {
   const ports = usePorts();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const { inventories } = useUser();
+  const { inventories, user } = useUser();
 
   const [inventory, setInventory] = useState(
     inventories.length ? inventories[0].id : undefined
   );
+  const [categories, setCategories] = useState([]);
   const [data, setData] = useState([]);
   const [rowModesModel, setRowModesModel] = useState({});
 
@@ -45,12 +99,27 @@ function Products() {
             ...v,
             category: v.category_id.name,
             variants: [v.variant_set_id.variants_id.map((v) => v.name)],
+            isNew: false,
           };
         });
         console.log(result);
         setData(result);
       });
   }, [inventory]);
+  useEffect(() => {
+    const getCategories = async () => {
+      let result = await axios
+        .get(
+          `http://localhost:${ports.SERVER_PORT}/catalog/categories/${user.id}`
+        )
+        .then((result) =>
+          result.data.list_categories.map((category) => category)
+        );
+      setCategories(result);
+      console.log(categories);
+    };
+    getCategories();
+  }, [user.id]);
 
   const handleAlignment = (event, newInventory) => {
     if (newInventory !== null) {
@@ -102,30 +171,73 @@ function Products() {
     }
   };
 
-  const processRowUpdate = (newRow) => {
+  const processRowUpdate = async (newRow) => {
     // Fetch UPDATE info sheeesh
-    console.log(newRow);
-    axios
-      .post(
-        `http://localhost:${ports.SERVER_PORT}/catalog/product/${newRow._id}/update`,
-        newRow
-      )
-      .then((result) => {
-        console.log("Product updated");
-        console.log(result.data);
-      });
+    // set category_id and inventory_id
+    [newRow.category_id] = categories.filter(
+      (c) => c.name === newRow.category
+    );
+    if (!newRow.isNew) {
+      axios
+        .post(
+          `http://localhost:${ports.SERVER_PORT}/catalog/product/${newRow.id}/update`,
+          newRow
+        )
+        .then((result) => {
+          console.log("Product updated");
+          console.log(result.data);
+        });
 
-    axios
-      .post(
-        `http://localhost:${ports.BAKERY_SERVER_PORT}/api/${newRow._id}/update_product`,
-        newRow
-      )
-      .then((result) => {
-        console.log("API BAKERY updated");
-      });
-    const updatedRow = { ...newRow, isNew: false };
-    setData(data.map((row) => (row.id === newRow.id ? updatedRow : row)));
-    return updatedRow;
+      axios
+        .post(
+          `http://localhost:${ports.BAKERY_SERVER_PORT}/api/${newRow.id}/update_product`,
+          newRow
+        )
+        .then((result) => {
+          console.log("API BAKERY updated");
+        });
+      const updatedRow = { ...newRow, isNew: false };
+      setData(
+        data.map((row) => (row.id === newRow.id ? updatedRow : row))
+      );
+      return updatedRow;
+    } else if (newRow.isNew) {
+      newRow.variant_set_id = "63c5055f0251c0798b612d39";
+      newRow.user_id = user.id;
+      newRow.inventory_id = inventory;
+
+      let new_product = await axios
+        .post(
+          `http://localhost:${ports.SERVER_PORT}/catalog/product/create`,
+          newRow
+        )
+        .then((result) => {
+          console.log("Product created");
+          console.log(result.data);
+          return result.data;
+        });
+      newRow.id = new_product._id;
+      console.log("inventory db test-----------");
+      console.log(newRow);
+      // create in INVENTORY
+      axios
+        .post(
+          `http://localhost:${ports.BAKERY_SERVER_PORT}/api/create`,
+          newRow
+        )
+        .then((result) => {
+          console.log(
+            "API BAKERY new product creted",
+            result.data.new_product
+          );
+        });
+      // create in BAKERY
+      const createdRow = { ...newRow, isNew: false };
+      setData(
+        data.map((row) => (row.id === newRow.id ? createdRow : row))
+      );
+      return createdRow;
+    }
   };
 
   const columns = [
@@ -135,7 +247,9 @@ function Products() {
       field: "category",
       headerName: "Category",
       flex: 1,
-      editable: false,
+      type: "singleSelect",
+      valueOptions: () => categories.map((c) => c.name),
+      editable: true,
     },
     {
       field: "img_name",
@@ -273,6 +387,15 @@ function Products() {
           onRowEditStart={handleRowEditStart}
           onRowEditStop={handleRowEditStop}
           processRowUpdate={processRowUpdate}
+          onProcessRowUpdateError={(error) =>
+            console.log(`On process row update error: ${error}`)
+          }
+          components={{
+            Toolbar: EditToolbar,
+          }}
+          componentsProps={{
+            toolbar: { setData, setRowModesModel },
+          }}
           experimentalFeatures={{ newEditingApi: true }}
         />
       </Box>

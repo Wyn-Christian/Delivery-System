@@ -118,7 +118,7 @@ exports.create = (req, res, next) => {
     if (err) return next(err);
 
     // Success: return the json
-    res.json({ new_product });
+    res.json(new_product);
     return;
   });
 };
