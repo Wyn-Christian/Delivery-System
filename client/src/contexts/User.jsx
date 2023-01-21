@@ -2,11 +2,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useNavPage } from "../contexts/NavPage";
+import { usePorts } from "./Ports";
 
 import axios from "axios";
 
 // User Custom Hooks
 export const useUserSource = () => {
+  const ports = usePorts();
   const [user, setUser] = useState({
     id: "63c696af30257e3cc3447a27",
     username: "admin",
@@ -23,7 +25,9 @@ export const useUserSource = () => {
   useEffect(() => {
     if (user) {
       axios
-        .get(`http://localhost:5000/catalog/inventories/${user.id}`)
+        .get(
+          `http://localhost:${ports.SERVER_PORT}/catalog/inventories/${user.id}`
+        )
         .then((result) => {
           setInventories(result.data.list_inventories);
         });
@@ -32,7 +36,10 @@ export const useUserSource = () => {
 
   const loginUser = ({ username, password }) => {
     axios
-      .post("http://localhost:5000/users/login", { username, password })
+      .post(`http://localhost:${ports.SERVER_PORT}/users/login`, {
+        username,
+        password,
+      })
       .then((result) => {
         console.log(result.data);
         let userDB = result.data;

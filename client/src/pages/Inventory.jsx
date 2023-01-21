@@ -6,9 +6,11 @@ import axios from "axios";
 import Header from "../components/Header";
 import { tokens } from "../contexts/Theme";
 import { useUser } from "../contexts/User";
+import { usePorts } from "../contexts/Ports";
 import { inventoryMockData } from "../mockData";
 
 function Inventory() {
+  const ports = usePorts();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const { user } = useUser();
@@ -18,7 +20,9 @@ function Inventory() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/catalog/inventories/${user.id}`)
+      .get(
+        `http://localhost:${ports.SERVER_PORT}/catalog/inventories/${user.id}`
+      )
       .then((res) => {
         setData(res.data.list_inventories);
       });

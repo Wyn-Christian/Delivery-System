@@ -7,6 +7,7 @@ import { checkoutsMockData } from "../mockData";
 import Header from "../components/Header";
 import { tokens } from "../contexts/Theme";
 import { useUser } from "../contexts/User";
+import { usePorts } from "../contexts/Ports";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -14,6 +15,7 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 });
 
 function Checkouts() {
+  const ports = usePorts();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const { user } = useUser();
@@ -22,7 +24,9 @@ function Checkouts() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/catalog/checkout-items/${user.id}`)
+      .get(
+        `http://localhost:${ports.SERVER_PORT}/catalog/checkout-items/${user.id}`
+      )
       .then((res) => {
         let result = res.data.list_checkout_items.map((v) => {
           return {

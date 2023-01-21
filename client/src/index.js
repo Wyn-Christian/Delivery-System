@@ -8,17 +8,20 @@ import CssBaseline from "@mui/material/CssBaseline";
 // GLOBAL CONTEXT
 import { NavPageProvider } from "./contexts/NavPage";
 import { UserProvider } from "./contexts/User";
+import { PortsProvider } from "./contexts/Ports";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <NavPageProvider>
-        <UserProvider>
-          <CssBaseline />
-          <App />
-        </UserProvider>
-      </NavPageProvider>
+      <PortsProvider>
+        <NavPageProvider>
+          <UserProvider>
+            <CssBaseline />
+            <App />
+          </UserProvider>
+        </NavPageProvider>
+      </PortsProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

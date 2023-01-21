@@ -14,6 +14,7 @@ import { productsMockData } from "../mockData";
 import Header from "../components/Header";
 import { tokens } from "../contexts/Theme";
 import { useUser } from "../contexts/User";
+import { usePorts } from "../contexts/Ports";
 
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -22,6 +23,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Close";
 
 function Products() {
+  const ports = usePorts();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const { inventories } = useUser();
@@ -34,7 +36,9 @@ function Products() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/catalog/products/inventory/${inventory}`)
+      .get(
+        `http://localhost:${ports.SERVER_PORT}/catalog/products/inventory/${inventory}`
+      )
       .then((res) => {
         let result = res.data.list_products.map((v) => {
           return {
@@ -103,21 +107,21 @@ function Products() {
     console.log(newRow);
     axios
       .post(
-        `http://localhost:5000/catalog/product/${newRow._id}/update`,
+        `http://localhost:${ports.SERVER_PORT}/catalog/product/${newRow._id}/update`,
         newRow
       )
       .then((result) => {
-        console.log("updated");
+        console.log("Product updated");
         console.log(result.data);
       });
 
     axios
       .post(
-        `http://localhost:5001/api/${newRow._id}/update_product`,
+        `http://localhost:${ports.BAKERY_SERVER_PORT}/api/${newRow._id}/update_product`,
         newRow
       )
       .then((result) => {
-        console.log("api updated");
+        console.log("API BAKERY updated");
       });
     const updatedRow = { ...newRow, isNew: false };
     setData(data.map((row) => (row.id === newRow.id ? updatedRow : row)));
