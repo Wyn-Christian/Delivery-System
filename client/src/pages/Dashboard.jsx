@@ -33,6 +33,7 @@ function Dashboard() {
   const { user } = useUser();
   // const [data, setData] = useState(checkoutsMockData);
   const [data, setData] = useState([]);
+  const [summary, setSummary] = useState({});
 
   useEffect(() => {
     axios
@@ -41,6 +42,14 @@ function Dashboard() {
       )
       .then((res) => {
         setData(res.data.list_checkout_items);
+      });
+    axios
+      .get(
+        `http://localhost:${ports.SERVER_PORT}/users/${user.id}/dashboard`
+      )
+      .then((res) => {
+        console.log(res);
+        setSummary(res.data);
       });
   }, [user.id]);
 
@@ -90,24 +99,29 @@ function Dashboard() {
 
       <ul className="box-info">
         <InfoCard
-          title="New Checkouts"
-          amount={`${122}`}
+          title="Total Bought Products"
+          amount={
+            summary.checkout_items
+              ? summary.checkout_items.total_product_bought
+              : 0
+          }
           icon="calendar-check"
         />
         <InfoCard
-          title="Total Checkouts"
-          amount={`${1232}`}
-          icon="calendar-check"
-        />
-        <InfoCard title="Total Products" amount={`${12}`} icon="package" />
-        <InfoCard
-          title="Recent Sales"
-          amount={currencyFormatter.format(1232)}
+          title="Total Products"
+          amount={summary.total_products ? summary.total_products : 0}
           icon="package"
         />
+
         <InfoCard
           title="Total Sales"
-          amount={currencyFormatter.format(123223)}
+          amount={
+            summary.checkout_items
+              ? `${currencyFormatter.format(
+                  summary.checkout_items.total_sales.$numberDecimal
+                )}`
+              : 0
+          }
           icon="package"
         />
       </ul>

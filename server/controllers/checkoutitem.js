@@ -1,5 +1,3 @@
-const async = require("async");
-
 const CheckOutItem = require("../models/checkoutitem");
 
 exports.list = function (req, res, next) {

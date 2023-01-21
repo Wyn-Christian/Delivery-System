@@ -2,6 +2,8 @@ const { body, validationResult } = require("express-validator");
 const async = require("async");
 
 const User = require("../models/user");
+const CheckOutItem = require("../models/checkoutitem");
+const Product = require("../models/product");
 
 // Get list of all users
 exports.list = function (req, res, next) {
@@ -92,4 +94,25 @@ exports.update = (req, res, next) => {
       return;
     }
   );
+};
+
+exports.dashboard = async (req, res, next) => {
+  let checkout_items = await CheckOutItem.aggregate([
+    {
+      $group: {
+        _id: null,
+        total_product_bought: {
+          $sum: "$quantity",
+        },
+        total_sales: {
+          $sum: "$total_price",
+        },
+      },
+    },
+  ]);
+  let total_products = await Product.find({
+    user_id: req.params.id,
+  }).count();
+  res.json({ checkout_items: checkout_items[0], total_products });
+  return;
 };

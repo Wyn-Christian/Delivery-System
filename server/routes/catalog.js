@@ -65,7 +65,8 @@ router.post("/checkout-item/create", checkout_item_controller.create);
 router.post("/checkout-item/:id/delete", checkout_item_controller.delete);
 router.post("/checkout-item/:id/update", checkout_item_controller.update);
 router.get("/checkout-item/:id", checkout_item_controller.detail);
+
 router.get("/checkout-items/:user_id", checkout_item_controller.user_list);
-router.get("/checkout-items/", checkout_item_controller.list);
+router.get("/checkout-items", checkout_item_controller.list);
 
 module.exports = router;
