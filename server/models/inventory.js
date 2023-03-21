@@ -18,10 +18,6 @@ const InventorySchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    inventory_id: {
-      type: Schema.Types.ObjectId,
-      ref: "Inventory",
-    },
   },
   {
     timestamps: true,
